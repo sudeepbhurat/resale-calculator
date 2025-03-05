@@ -12,7 +12,11 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_BASE_URL = 'https://resale-calculator.onrender.com/api';
+=======
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://resale-calculator.onrender.com/api';
+>>>>>>> 170a007613a513da5ed776535bbcd880ae31bd28
 
 function App() {
   const [formData, setFormData] = useState({
