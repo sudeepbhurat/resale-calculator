@@ -4,7 +4,7 @@ import math
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "https://your-netlify-domain.netlify.app"]}})
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def get_depreciation_rates(category):
     """
