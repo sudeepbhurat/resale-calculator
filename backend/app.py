@@ -4,7 +4,15 @@ import math
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {
+    "origins": [
+        "http://localhost:3000",
+        "https://resale-calculator.vercel.app",
+        "https://resale-calculator-frontend.vercel.app"
+    ],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type"]
+}})
 
 def get_depreciation_rates(category):
     """
@@ -50,8 +58,11 @@ def resale_price(original_price, age, category, condition):
     
     return round(resale_value * condition_factor, 2)
 
-@app.route('/api/calculate', methods=['POST'])
+@app.route('/api/calculate', methods=['POST', 'OPTIONS'])
 def calculate_resale():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         data = request.get_json()
         original_price = float(data.get('original_price', 0))
@@ -74,16 +85,22 @@ def calculate_resale():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-@app.route('/api/categories', methods=['GET'])
+@app.route('/api/categories', methods=['GET', 'OPTIONS'])
 def get_categories():
+    if request.method == 'OPTIONS':
+        return '', 204
     categories = ["Electronics", "Cycles", "Appliances"]
     return jsonify(categories)
 
-@app.route('/api/conditions', methods=['GET'])
+@app.route('/api/conditions', methods=['GET', 'OPTIONS'])
 def get_conditions():
+    if request.method == 'OPTIONS':
+        return '', 204
     conditions = ["new", "good", "decent", "average", "poor"]
     return jsonify(conditions)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port) 
+    app.run(host='0.0.0.0', port=port)
+
+
