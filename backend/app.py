@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from functools import lru_cache
 import math
 import os
 
@@ -14,30 +15,37 @@ CORS(app, resources={r"/api/*": {
     "allow_headers": ["Content-Type"]
 }})
 
+# Cache the depreciation rates
+DEPRECIATION_MODELS = {
+    "Electronics": [0.70, 0.85, 0.90],  # Year 1: 30% drop, Year 2: 15%, then 10% yearly
+    "Cycles": [0.80, 0.90, 0.95],       # Year 1: 20% drop, Year 2: 10%, then 5% yearly
+    "Appliances": [0.85, 0.90, 0.95],   # Year 1: 15% drop, Year 2: 10%, then 5% yearly
+}
+
+# Cache the condition factors
+CONDITION_FACTORS = {
+    "new": 1.0,
+    "good": 0.9,
+    "decent": 0.75,
+    "average": 0.6,
+    "poor": 0.4
+}
+
+@lru_cache(maxsize=128)
 def get_depreciation_rates(category):
     """
     Returns the depreciation rates for a given product category.
     """
-    depreciation_models = {
-        "Electronics": [0.70, 0.85, 0.90],  # Year 1: 30% drop, Year 2: 15%, then 10% yearly
-        "Cycles": [0.80, 0.90, 0.95],       # Year 1: 20% drop, Year 2: 10%, then 5% yearly
-        "Appliances": [0.85, 0.90, 0.95],   # Year 1: 15% drop, Year 2: 10%, then 5% yearly
-    }
-    return depreciation_models.get(category, [0.80, 0.90, 0.95])  # Default rates if category not found
+    return DEPRECIATION_MODELS.get(category, [0.80, 0.90, 0.95])
 
+@lru_cache(maxsize=128)
 def get_condition_factor(condition):
     """
     Returns a condition factor multiplier based on product condition.
     """
-    condition_factors = {
-        "new": 1.0,
-        "good": 0.9,
-        "decent": 0.75,
-        "average": 0.6,
-        "poor": 0.4
-    }
-    return condition_factors.get(condition, 0.9)  # Default to 'good' if invalid
+    return CONDITION_FACTORS.get(condition, 0.9)
 
+@lru_cache(maxsize=128)
 def resale_price(original_price, age, category, condition):
     """
     Calculate the resale price of a product using a piecewise depreciation model.
@@ -89,18 +97,14 @@ def calculate_resale():
 def get_categories():
     if request.method == 'OPTIONS':
         return '', 204
-    categories = ["Electronics", "Cycles", "Appliances"]
-    return jsonify(categories)
+    return jsonify(list(DEPRECIATION_MODELS.keys()))
 
 @app.route('/api/conditions', methods=['GET', 'OPTIONS'])
 def get_conditions():
     if request.method == 'OPTIONS':
         return '', 204
-    conditions = ["new", "good", "decent", "average", "poor"]
-    return jsonify(conditions)
+    return jsonify(list(CONDITION_FACTORS.keys()))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-
