@@ -31,13 +31,17 @@ function App() {
   const fetchData = useCallback(async () => {
     try {
       setIsLoadingData(true);
+      console.time('fetchData');
+      
       const [categoriesRes, conditionsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/categories`),
         axios.get(`${API_BASE_URL}/conditions`),
       ]);
+      
+      console.timeEnd('fetchData');
+      
       setCategories(categoriesRes.data);
       setConditions(conditionsRes.data);
-      // Set initial values after data is loaded
       setFormData(prev => ({
         ...prev,
         category: categoriesRes.data[0] || '',
@@ -70,11 +74,14 @@ function App() {
     setResult(null);
 
     try {
+      console.time('calculate');
       const response = await axios.post(`${API_BASE_URL}/calculate`, {
         ...formData,
         original_price: parseFloat(formData.original_price),
         age: parseInt(formData.age),
       });
+      console.timeEnd('calculate');
+      
       setResult(response.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to calculate resale price');
