@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -28,33 +28,32 @@ function App() {
   const [error, setError] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoadingData(true);
-        const [categoriesRes, conditionsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/categories`),
-          axios.get(`${API_BASE_URL}/conditions`),
-        ]);
-        console.log('Categories:', categoriesRes.data);
-        console.log('Conditions:', conditionsRes.data);
-        setCategories(categoriesRes.data);
-        setConditions(conditionsRes.data);
-        // Set initial values after data is loaded
-        setFormData(prev => ({
-          ...prev,
-          category: categoriesRes.data[0] || '',
-          condition: conditionsRes.data[0] || '',
-        }));
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load categories and conditions. Please check if the backend server is running.');
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoadingData(true);
+      const [categoriesRes, conditionsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/categories`),
+        axios.get(`${API_BASE_URL}/conditions`),
+      ]);
+      setCategories(categoriesRes.data);
+      setConditions(conditionsRes.data);
+      // Set initial values after data is loaded
+      setFormData(prev => ({
+        ...prev,
+        category: categoriesRes.data[0] || '',
+        condition: conditionsRes.data[0] || '',
+      }));
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load categories and conditions. Please check if the backend server is running.');
+    } finally {
+      setIsLoadingData(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -204,4 +203,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
