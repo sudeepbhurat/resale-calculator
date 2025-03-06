@@ -3,6 +3,7 @@ from flask_cors import CORS
 from functools import lru_cache
 import math
 import os
+import time
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {
@@ -31,25 +32,27 @@ CONDITION_FACTORS = {
     "poor": 0.4
 }
 
+@app.before_request
+def before_request():
+    request.start_time = time.time()
+
+@app.after_request
+def after_request(response):
+    if hasattr(request, 'start_time'):
+        duration = time.time() - request.start_time
+        print(f"{request.method} {request.path} - {duration:.3f}s")
+    return response
+
 @lru_cache(maxsize=128)
 def get_depreciation_rates(category):
-    """
-    Returns the depreciation rates for a given product category.
-    """
     return DEPRECIATION_MODELS.get(category, [0.80, 0.90, 0.95])
 
 @lru_cache(maxsize=128)
 def get_condition_factor(condition):
-    """
-    Returns a condition factor multiplier based on product condition.
-    """
     return CONDITION_FACTORS.get(condition, 0.9)
 
 @lru_cache(maxsize=128)
 def resale_price(original_price, age, category, condition):
-    """
-    Calculate the resale price of a product using a piecewise depreciation model.
-    """
     condition_factor = get_condition_factor(condition)
     
     if age <= 0:
